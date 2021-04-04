@@ -158,6 +158,9 @@
 
   // side to move
   var sideToMove = 8;
+  
+  // board orientation
+  var flip = 0;
 
   // to store the best move found in search
   var bestSourceSquare, bestTargetSquare;
@@ -172,7 +175,7 @@
   var userSourceSquare, userTargetSquare;
 
   // default search depth
-  var searchDepth = 5;
+  var searchDepth = 3;
 
 
   /******************************\
@@ -182,7 +185,7 @@
 
    ==============================
   \******************************/
-
+var ply = 0;
   // search board position for the best move
   function search(sideToMove, alpha, beta, depth, validate) {
     // we are in the leaf node
@@ -264,10 +267,7 @@
               if(pieceType < 3 && !(stepVector & 7) != !capturedPiece) break;
               
               // return mating score if king has been captured
-              if((capturedPiece & 7) == 3) {
-                if (validate) pseudoLegalMoves.push('king capture');
-                return 10000;
-              }
+              if((capturedPiece & 7) == 3) return 10000 - ply;
               
               // validate moves
               if (validate) pseudoLegalMoves.push([sourceSquare, targetSquare]);
@@ -280,12 +280,14 @@
               // pawn promotion
               if(pieceType < 3) {   // if pawn
                 if(targetSquare + stepVector + 1 & 0x80)    // goes to the 1th/8th rank
-                  board[targetSquare] |= 7;               // convert it to queen
+                  board[targetSquare] |= 7;                 // convert it to queen
               }
 
               // recursive negamax search call
+              ply++
               score = -search(24 - sideToMove, -beta, -alpha, depth - 1);
-
+              ply--;
+              
               // take back
               board[targetSquare] = 0;                   // clear the destination square (to square)
               board[sourceSquare] = piece;               // put the piece back to it's original square (from square)
@@ -359,7 +361,7 @@
       // reset move list
       pseudoLegalMoves = [];
       
-      // search position
+      // validate moves
       search(sideToMove, -10000, 10000, 1, true);
       
       // highlight pseudo legal moves
@@ -383,7 +385,7 @@
       var col = userSourceSquare & 7;
       var row = userSourceSquare >> 4;
       
-      // move piece
+      // move user piece
       board[clickSquare] = board[userSourceSquare];
       board[userSourceSquare] = 0;
       
@@ -435,20 +437,22 @@
   function makeEngineMove(depth) {
     // search position
     var score = search(sideToMove, -10000, 10000, depth);
-    
+
     // Black checkmate detection
-    if(score == -10000) {
+    if(score <= -9999) {
+      // update board view
       drawBoard();
       
       // highlight king square
       for (let square = 0; square < 128; square++)
         if (board[square] == 19)
-          document.getElementById(square).style.backgroundColor = "red";
+          document.getElementById(square).classList.add('mate');
       
+      // no more moves to make
       return;
     }
     
-    // make AI move
+    // move engine piece
     board[bestTargetSquare] = board[bestSourceSquare];
     board[bestSourceSquare] = 0;
     
@@ -461,18 +465,24 @@
     sideToMove = 24 - sideToMove;
     
     // White checkmate detection
-    if(score == 10000) {
+    if(score >= 9998) {
+      // update board view
       drawBoard();
+      
+      // highlight last move
+      document.getElementById(bestTargetSquare).classList.add('highlight');
       
       // highlight king square
       for (let square = 0; square < 128; square++)
         if (board[square] == 11)
-          document.getElementById(square).style.backgroundColor = "red";
-
+          document.getElementById(square).classList.add('mate');
+      
+      // no more moves to make
       return;
     }
         
     else {
+      // update board view
       drawBoard();
       
       // highlight last move
@@ -487,40 +497,56 @@
     catch (e) {/* nothing to remove when board wasn't initially rendered */}
     
     // add classes for highlighting
-    document.write('<style>.highlight { box-shadow: inset 0 0 2px 2px red; }</style>');
+    document.write(`
+      <style>
+        .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
+        .mate { box-shadow: inset 0px 0px 5px 5px red; }
+      </style>`);
     
     // create HTML table tag (disable text selection, adjust mouse pointer)
     var chessBoard = `<table id="board"
+                             bgcolor="#996633"
                              align="center"
-                             cellspacing="0"
+                             cellspacing="1"
                              style="cursor: pointer;
                                    -moz-user-select: none;
                                    -webkit-user-select: none;
                                    -ms-user-select:none;
                                     user-select:none;
                                    -o-user-select:none;
-                                    border: 2px solid #999;"
+                                    border: 1px solid #996633;"
                              unselectable="on"
                              onselectstart="return false;" 
                              onmousedown="return false;"`;
 
     // loop over board rows
     for (var row = 0; row < 8; row++)
-    {
+    {     
       // create table row
       chessBoard += '<tr>'
       
       // loop over board columns
       for (var col = 0; col < 16; col++)
       {
+        // custom file and rank for board flipping
+        var file, rank;
+        
+        // flip board view
+        if (flip) {
+          file = 16 - 1 - col;
+          rank = 8 - 1 - row;
+        } else {
+          file = col;
+          rank = row;
+        }
         // init square
-        var square = row * 16 + col;
+        var square = rank * 16 + file;
         
         // make sure square is on board
         if ((square & 0x88) == 0)
           // create table cell
           chessBoard += '<td align="center" id="' + square + 
-                         '"bgcolor="#' + ( ((col + row) % 2) ? 'bbb' : 'eee') +
+                         '"bgcolor="#' + ( ((col + row) % 2) ? 'd9b38c' : 'fff5e6') +
                          '" width="60" height="60" style="font-size: 50px;"' +
                          ' onclick="makeUserMove(this.id)">' + pieces[board[square] & 15] +
                          '</td>';
@@ -536,7 +562,19 @@
     // render chess board to screen
     document.write(chessBoard);
   };
-
+  
+  // parse & init search depth
+  if (window.location.href.includes('searchDepth'))
+    searchDepth = parseInt(window.location.href.split('searchDepth=')[1].split('&')[0])
+  
+  // parse & init side color
+  if (window.location.href.includes('color')) {
+    if (window.location.href.split('color=')[1].split('&')[0] == 'black') {
+      flip = 1;
+      makeEngineMove(searchDepth);
+    }
+  }
+  
   // initially render board view
   drawBoard();
 
