@@ -126,7 +126,7 @@ var pieces = [
 ];
 
 // Relative values to evaluate the material score of the position
-var piece_weights = [
+var pieceWeights = [
   //     bP       bK  bN    bB    bR    bQ
   0, 0, -100,     0, -300, -350, -500, -900,
   
@@ -135,7 +135,7 @@ var piece_weights = [
 ];
 
 // piece move offsets
-var move_offsets = [
+var moveOffsets = [
 
    15,  16,  17,   0,                           // black pawns
   -15, -16, -17,   0,                           // white pawns
@@ -146,9 +146,9 @@ var move_offsets = [
                                                    black pawns, white pawns, kings, knights, bishops, rooks, queens
                                                    
                                                    e.g. piece type is 4 - knight
-                                                   move_offsets[30] == 0
-                                                   move_offsets[from 31 to 37] == 3, -1, 12, 21, 16, 7, 12
-                                                   so move_offsets[30 + type(which is 4 in case of knight)] is 34,
+                                                   moveOffsets[30] == 0
+                                                   moveOffsets[from 31 to 37] == 3, -1, 12, 21, 16, 7, 12
+                                                   so moveOffsets[30 + type(which is 4 in case of knight)] is 34,
                                                    so at move_offset[34] value is 21 - this is the index where knight
                                                    offsets are starting, so we can loop over knight move offests to
                                                    generate knight moves.
@@ -163,13 +163,13 @@ var sideToMove = 8;
 var bestSourceSquare, bestTargetSquare;
 
 // variable to check click-on-piece state
-var click_lock = false;
+var clickLock = false;
 
 // user input variables
-var user_source, user_target;
+var userSourceSquare, userTargetSquare;
 
 // default search depth
-var search_depth = 5;
+var searchDepth = 5;
 
 
 /******************************\
@@ -188,19 +188,16 @@ function search(sideToMove, depth, alpha, beta) {
     let score = 0;
 
     // loop over board squares
-    for (var square = 0; square < 128; square++)
-    {
+    for (var square = 0; square < 128; square++) {
       // make sure square is on board
-      if ((square & 0x88) == 0)
-      {
+      if ((square & 0x88) == 0) {
         // init piece
         let piece = board[square]
         
         // make sure square contains a piece
-        if (piece)
-        {
+        if (piece) {
           // calculate material score
-          score += piece_weights[piece & 15];
+          score += pieceWeights[piece & 15];
           
           // calculate positional score
           (piece & 8) ? (score += board[square + 8]) : (score -= board[square + 8]);
@@ -212,20 +209,18 @@ function search(sideToMove, depth, alpha, beta) {
     return (sideToMove == 8) ? score: -score;
   }
 
-  var old_alpha = alpha;       // needed to check whether to store best move or not
-  var temp_source;             // temorary best from square
-  var temp_target;             // temporary best to square
-  var score = -10000;          // minus infinity
+  var oldAlpha = alpha;       // needed to check whether to store best move or not
+  var tempBestSourceSquare;   // temorary best from square
+  var tempBestTargetSquare;   // temporary best to square
+  var score = -10000;         // minus infinity
 
   // move generator variables
-  var piece, piece_type, directions, sourceSquare, targetSquare, capturedSquare, capturedPiece, stepVector;
+  var piece, pieceType, directions, sourceSquare, targetSquare, capturedSquare, capturedPiece, stepVector;
   
   // loop over board squares
-  for (var square = 0; square < 128; square++)
-  {
+  for (var square = 0; square < 128; square++) {
     // make sure that square is on board
-    if ((square & 0x88) == 0)
-    {
+    if ((square & 0x88) == 0) {
       // init source square
       sourceSquare = square
     
@@ -233,23 +228,20 @@ function search(sideToMove, depth, alpha, beta) {
       piece = board[square];
       
       // make sure piece belongs to the sideToMove to move
-      if (piece & sideToMove)
-      {
+      if (piece & sideToMove) {
         // extract piece type
-        piece_type = piece & 7;
+        pieceType = piece & 7;
         
         // init directions
-        directions = move_offsets[piece_type + 30];
+        directions = moveOffsets[pieceType + 30];
         
         // loop over piece move directions
-        while(stepVector = move_offsets[++directions])    // loop over move offsets
-        {
+        while(stepVector = moveOffsets[++directions]) {   // loop over move offsets
           // init target square
           targetSquare = sourceSquare;
           
           // loop over squares within a given move direction ray
-          do
-          {
+          do {
             // init next target square within move direction ray
             targetSquare += stepVector;
             
@@ -266,7 +258,7 @@ function search(sideToMove, depth, alpha, beta) {
             if(capturedPiece & sideToMove) break;
             
             // pawns captures only diagonally
-            if(piece_type < 3 && !(stepVector & 7) != !capturedPiece) break;
+            if(pieceType < 3 && !(stepVector & 7) != !capturedPiece) break;
             
             // return mating score if king has been captured
             if((capturedPiece & 7) == 3) return 10000;
@@ -277,44 +269,41 @@ function search(sideToMove, depth, alpha, beta) {
             board[targetSquare] = piece;     // put piece to destination square (to square)
 
             // pawn promotion
-            if(piece_type < 3)    // if pawn
-            {
+            if(pieceType < 3) {   // if pawn
                 if(targetSquare + stepVector + 1 & 0x80)    // goes to the 1th/8th rank
-                    board[targetSquare] |= 7;                // convert it to queen
+                    board[targetSquare] |= 7;               // convert it to queen
             }
 
             // recursive negamax search call
-            score = -search(24 - sideToMove, depth - 1, -beta, -alpha);    // recursive negamax search call
+            score = -search(24 - sideToMove, depth - 1, -beta, -alpha);
 
             // take back
             board[targetSquare] = 0;                   // clear the destination square (to square)
             board[sourceSquare] = piece;               // put the piece back to it's original square (from square)
-            board[capturedSquare] = capturedPiece;    // restore captured piece on source square if any
+            board[capturedSquare] = capturedPiece;     // restore captured piece on source square if any
             
             //Needed to detect checkmate
             bestSourceSquare = sourceSquare;
             bestTargetSquare = targetSquare;
             
-            // PV node
-            if(score > alpha)
-            {
-              // fail-high node
-              if(score >= beta)
-                return beta;    // beta cutoff
+            // Found better move (PV node)
+            if(score > alpha) {
+              // move is good enough to drop the branch (fail-high node)
+              if(score >= beta) return beta;
               
               // update alpha value
               alpha = score;
 
               // save best move in given branch
-              temp_source = sourceSquare;
-              temp_target = targetSquare;
+              tempBestSourceSquare = sourceSquare;
+              tempBestTargetSquare = targetSquare;
             }        
             
             // fake capture for non-slider pieces
-            capturedPiece += piece_type < 5;
+            capturedPiece += pieceType < 5;
             
             // unfake capture for pawns if double pawn push is on the cards
-            if(piece_type < 3 & 6*sideToMove + (targetSquare & 0x70) == 0x80) capturedPiece--;
+            if(pieceType < 3 & 6*sideToMove + (targetSquare & 0x70) == 0x80) capturedPiece--;
           }
           
           // condition to break out of loop over squares for non-slider pieces
@@ -324,14 +313,13 @@ function search(sideToMove, depth, alpha, beta) {
     }
   }
   
-  // store the best move
-  if(alpha != old_alpha)
-  {
-      bestSourceSquare = temp_source;
-      bestTargetSquare = temp_target;
+  // associate best score with best move
+  if(alpha != oldAlpha) {
+      bestSourceSquare = tempBestSourceSquare;
+      bestTargetSquare = tempBestTargetSquare;
   }
 
-  // fail-low node
+  // didn't find a better move (fail-low node)
   return alpha;
 }
 
@@ -344,35 +332,35 @@ function search(sideToMove, depth, alpha, beta) {
  ==============================
 \******************************/
 
-function make_move(sq) {
+function makeUserMove(sq) {
   // convert div ID to square index
   var click_sq = parseInt(sq, 10)
   
   // if user clicks on source square 
-  if(!click_lock && board[click_sq]){
+  if(!clickLock && board[click_sq]){
     // highlight clicked square
     document.getElementById(sq).style.backgroundColor = '#fff';
     
     // init user source square
-    user_source = click_sq;
+    userSourceSquare = click_sq;
     
     // lock click
-    click_lock ^= 1;
+    clickLock ^= 1;
   }
   
   // if user clicks on destination square
-  else if(click_lock){
+  else if(clickLock){
     // extract row and column from target square
-    var col = user_source & 7;
-    var row = user_source >> 4;
+    var col = userSourceSquare & 7;
+    var row = userSourceSquare >> 4;
     
     // restore color of the square that piece has left
     var color = (col + row) % 2 ? 'aaa' : 'eee'
-    document.getElementById(user_source).style.backgroundColor = '#' + color;
+    document.getElementById(userSourceSquare).style.backgroundColor = '#' + color;
     
     // move piece
-    board[click_sq] = board[user_source];
-    board[user_source] = 0;
+    board[click_sq] = board[userSourceSquare];
+    board[userSourceSquare] = 0;
     
     // if pawn promotion
     if(((board[click_sq] == 9) && (click_sq >= 0 && click_sq <= 7)) ||
@@ -383,17 +371,17 @@ function make_move(sq) {
     sideToMove = 24 - sideToMove;
     
     // unlock click
-    click_lock ^= 1;
+    clickLock ^= 1;
     
     // update position
     drawBoard();
     
     // make computer move in response
-    setTimeout("think(search_depth)", 100);
+    setTimeout("makeEngineMove(searchDepth)", 100);
   }
 }
 
-function think(depth){
+function makeEngineMove(depth) {
   // search position
   var score = search(sideToMove, depth, -10000, 10000);
   
@@ -409,21 +397,20 @@ function think(depth){
   // change sideToMove
   sideToMove = 24 - sideToMove;
   
-  // Checkmate detection
-  if(score == 10000){
+  // White checkmate detection
+  if(score == 10000) {
     drawBoard();
     setTimeout(
       function(){
         alert("8 is checkmated!");
-        location.reload();
       }, 100);
   }
   
-  else if(score == -10000){
+  // Black checkmate detection
+  else if(score == -10000) {
     setTimeout(
       function(){
         alert("Black is checkmated!");
-        location.reload();
       }, 100);
   }
   
@@ -455,7 +442,7 @@ function drawBoard() {
       // make sure square is on board
       if ((square & 0x88) == 0)
         // create table cell
-        chess_board += '<td align="center" id="' + square + '"bgcolor="#' + ( ((col + row) % 2) ? 'aaa' : 'eee') + '" width="60" height="60" style="font-size: 50px;" onclick="make_move(this.id)">' + pieces[board[square] & 15] + '</td>';
+        chess_board += '<td align="center" id="' + square + '"bgcolor="#' + ( ((col + row) % 2) ? 'aaa' : 'eee') + '" width="60" height="60" style="font-size: 50px;" onclick="makeUserMove(this.id)">' + pieces[board[square] & 15] + '</td>';
     }
     
     // close table row tag
