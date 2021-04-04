@@ -162,7 +162,7 @@
   // to store the best move found in search
   var bestSourceSquare, bestTargetSquare;
   
-  // legal moves for validation and highlighting
+  // pseudo legal moves for validation and highlighting
   var pseudoLegalMoves = [];
 
   // variable to check click-on-piece state
@@ -436,6 +436,18 @@
     // search position
     var score = search(sideToMove, -10000, 10000, depth);
     
+    // Black checkmate detection
+    if(score == -10000) {
+      drawBoard();
+      
+      // highlight king square
+      for (let square = 0; square < 128; square++)
+        if (board[square] == 19)
+          document.getElementById(square).style.backgroundColor = "red";
+      
+      return;
+    }
+    
     // make AI move
     board[bestTargetSquare] = board[bestSourceSquare];
     board[bestSourceSquare] = 0;
@@ -451,20 +463,15 @@
     // White checkmate detection
     if(score == 10000) {
       drawBoard();
-      setTimeout(
-        function(){
-          alert("8 is checkmated!");
-        }, 100);
+      
+      // highlight king square
+      for (let square = 0; square < 128; square++)
+        if (board[square] == 11)
+          document.getElementById(square).style.backgroundColor = "red";
+
+      return;
     }
-    
-    // Black checkmate detection
-    else if(score == -10000) {
-      setTimeout(
-        function(){
-          alert("Black is checkmated!");
-        }, 100);
-    }
-    
+        
     else {
       drawBoard();
       
@@ -491,7 +498,8 @@
                                    -webkit-user-select: none;
                                    -ms-user-select:none;
                                     user-select:none;
-                                   -o-user-select:none;" 
+                                   -o-user-select:none;
+                                    border: 2px solid #999;"
                              unselectable="on"
                              onselectstart="return false;" 
                              onmousedown="return false;"`;
