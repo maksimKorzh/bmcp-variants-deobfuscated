@@ -87,19 +87,19 @@
                  PIECE ENCODING
     =========================================
     
-     wP : P+ | w = 9     0001 | 1000 = 1001
-     wK :  K | w = 11    0011 | 1000 = 1011
-     wN :  N | w = 12    0100 | 1000 = 1100
-     wB :  B | w = 13    0101 | 1000 = 1101
-     wR :  R | w = 14    0110 | 1000 = 1110
-     wQ :  Q | w = 15    0111 | 1000 = 1111
+     wP : P+| w = 9     0001 | 1000 = 1001
+     wK : K | w = 11    0011 | 1000 = 1011
+     wN : N | w = 12    0100 | 1000 = 1100
+     wB : B | w = 13    0101 | 1000 = 1101
+     wR : R | w = 14    0110 | 1000 = 1110
+     wQ : Q | w = 15    0111 | 1000 = 1111
     
-     bP : P- | b = 18   00010 | 10000 = 10010
-     bK :  K | b = 19   00011 | 10000 = 10011
-     bN :  N | b = 20   00100 | 10000 = 10100
-     bB :  B | b = 21   00101 | 10000 = 10101
-     bR :  R | b = 22   00110 | 10000 = 10110
-     bQ :  Q | b = 23   00111 | 10000 = 10111
+     bP : P-| b = 18   00010 | 10000 = 10010
+     bK : K | b = 19   00011 | 10000 = 10011
+     bN : N | b = 20   00100 | 10000 = 10100
+     bB : B | b = 21   00101 | 10000 = 10101
+     bR : R | b = 22   00110 | 10000 = 10110
+     bQ : Q | b = 23   00111 | 10000 = 10111
 
   \*******************************************/
 
@@ -142,18 +142,7 @@
       1,  16,  -1, -16,   0,                      // rooks
       1,  16,  -1, -16,  15, -15, 17, -17,  0,    // queens, kings and bishops
      14, -14,  18, -18,  31, -31, 33, -33,  0,    // knights
-      3,  -1,  12,  21,  16,   7, 12              /* starting indexes for each piece type in order:
-                                                     black pawns, white pawns, kings, knights, bishops, rooks, queens
-                                                     
-                                                     e.g. piece type is 4 - knight
-                                                     moveOffsets[30] == 0
-                                                     moveOffsets[from 31 to 37] == 3, -1, 12, 21, 16, 7, 12
-                                                     so moveOffsets[30 + type(which is 4 in case of knight)] is 34,
-                                                     so at move_offset[34] value is 21 - this is the index where knight
-                                                     offsets are starting, so we can loop over knight move offests to
-                                                     generate knight moves.
-                                                     
-                                                  */
+      3,  -1,  12,  21,  16,   7, 12              // starting indexes for every piece type
   ];
 
   // side to move
@@ -176,16 +165,18 @@
 
   // default search depth
   var searchDepth = 3;
-
+  
+  // search ply
+  var ply = 0;
 
   /******************************\
    ==============================
 
-            CHESS ENGINE
+               ENGINE
 
    ==============================
   \******************************/
-var ply = 0;
+
   // search board position for the best move
   function search(sideToMove, alpha, beta, depth, validate) {
     // we are in the leaf node
@@ -211,7 +202,7 @@ var ply = 0;
         }
       }
 
-      // return positive score for 8 and negative for black
+      // return positive score for white and negative for black
       return (sideToMove == 8) ? score: -score;
     }
 
@@ -221,7 +212,8 @@ var ply = 0;
     var score = -10000;         // minus infinity
 
     // move generator variables
-    var piece, pieceType, directions, sourceSquare, targetSquare, capturedSquare, capturedPiece, stepVector;
+    var sourceSquare, targetSquare, capturedSquare, capturedPiece;
+    var piece, pieceType, directions, stepVector;
     
     // loop over board squares
     for (var square = 0; square < 128; square++) {
@@ -267,7 +259,7 @@ var ply = 0;
               if(pieceType < 3 && !(stepVector & 7) != !capturedPiece) break;
               
               // return mating score if king has been captured
-              if((capturedPiece & 7) == 3) return 10000 - ply;
+              if((capturedPiece & 7) == 3) return 10000 - ply; // mate in "ply"
               
               // validate moves
               if (validate) pseudoLegalMoves.push([sourceSquare, targetSquare]);
@@ -290,8 +282,8 @@ var ply = 0;
               
               // take back
               board[targetSquare] = 0;                   // clear the destination square (to square)
-              board[sourceSquare] = piece;               // put the piece back to it's original square (from square)
-              board[capturedSquare] = capturedPiece;     // restore captured piece on source square if any
+              board[sourceSquare] = piece;               // put the piece back to it's original square
+              board[capturedSquare] = capturedPiece;     // restore captured piece on source square
               
               //Needed to detect checkmate
               bestSourceSquare = sourceSquare;
@@ -338,7 +330,7 @@ var ply = 0;
   /******************************\
    ==============================
 
-             CHESS GUI
+                GUI
 
    ==============================
   \******************************/
@@ -547,7 +539,7 @@ var ply = 0;
           // create table cell
           chessBoard += '<td align="center" id="' + square + 
                          '"bgcolor="#' + ( ((col + row) % 2) ? 'd9b38c' : 'fff5e6') +
-                         '" width="60" height="60" style="font-size: 50px;"' +
+                         '" width="70" height="70" style="font-size: 50px;"' +
                          ' onclick="makeUserMove(this.id)">' + pieces[board[square] & 15] +
                          '</td>';
       }
