@@ -216,7 +216,7 @@
   ];
 
   // 11x14 mailbox
-  var board = [
+  /*var board = [
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
    -1, 24, 21, 22, 20, 19, 20, 22, 21, 24, -1,
@@ -229,6 +229,23 @@
    -1,  0,  7,  0,  0,  0,  0,  0,  7,  0, -1,
    -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
    -1,  8,  5,  6,  4,  3,  4,  6,  5,  8, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+  ];*/
+  
+  var board = [
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1,  0,  0,  0,  0, 19,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0, 18,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  8,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  3,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
   ];
@@ -395,8 +412,26 @@
               // prevent cannon from capturing own piece (special case)
               if (jumpOver && ((capturedPiece & 16) == sideToMove)) break;
               
-              // prevent king and advisors ecaprig the palace
+              // prevent king and advisors escaping the palace
               if ((pieceType == 3 || pieceType == 4) && PALACE_ZONES[targetSquare] != 1) break;
+              
+              // opposed kings detection
+              if ((pieceType & 15) == 3) {
+                let direction, target = sourceSquare;
+                sideToMove == 0 ? (direction = -11) : (direction = 11);
+                let opposedKings = false;
+
+                for (let index = 0; index < 9; index++) {
+                  target += direction;
+                  if (board[target] && (board[target] & 15) != 3) break;
+                  if ((board[target] & 15) == 3) {
+                    opposedKings = true;
+                    break;
+                  };
+                }
+                
+                if (opposedKings) return 10000 - ply;
+              }
               
               // return mating score if king has been captured
               if((capturedPiece & 15) == 3) return 10000 - ply; // mate in "ply"
