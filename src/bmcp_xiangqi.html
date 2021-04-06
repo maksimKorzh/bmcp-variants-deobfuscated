@@ -3,13 +3,6 @@
 
 <!-- Board style -->
 <style>
-
-  .grid {
-      background-image:
-        repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%),
-        repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%);
-      background-size: 71px 71px;
-  }
   .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
   .mate { box-shadow: inset 0px 0px 5px 5px red; }
 </style>
@@ -123,7 +116,7 @@
   \*******************************************/
 
   // 11x14 mailbox
-  var board = [
+  /*var board = [
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
    -1, 24, 21, 22, 20, 19, 20, 22, 21, 24, -1,
@@ -138,7 +131,41 @@
    -1,  8,  5,  6,  4,  3,  4,  6,  5,  8, -1,
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+  ];*/
+  
+  var board = [
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1,  0,  0,  0,  0, 19,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  1,  0,  1,  0,  1,  0,  1,  0,  1, -1,
+   -1,  0,  7,  0,  0,  0,  0,  0,  7,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  8,  5,  6,  4,  3,  4,  6,  5,  8, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
   ];
+  
+  /*var board = [
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, 24, 21, 22, 20, 19, 20, 22, 21, 24, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0, 23,  0,  0,  0,  0,  0, 23,  0, -1,
+   -1, 18,  0, 18,  0, 18,  0, 18,  0, 18, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
+   -1,  0,  0,  0,  0,  3,  0,  0,  0,  0, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+  ];*/
 
   // river banks of xiangqi board
   const RIVER_ZONES = [
@@ -202,11 +229,29 @@
 
   // Relative values to evaluate the material score of the position
   const PIECE_WEIGHTS = [
-    //   rP      rK    rA   rN    rB   rC    rR
-    0,   30, 0, 6000, 120, 270,  129, 285,  600,
+    //   rP      rK     rA    rN    rB    rC    rR
+    0,   30, 0, 6000,  120,  270,  120,  285,  600,
     
-    //   bP      bK    bA   bN    bB   bC    bR
-         30,    6000, 120, 270,  120, 285,  600
+    //   bP      bK     bA    bN    bB    bC    bR
+        -30,   -6000, -120, -270, -120, -285, -600
+  ];
+  
+  // Piece-square table
+  const PST = [
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -5, -5,  0,  1,  5,  1,  0, -5, -5, -1,
+   -1,  5,  0,  0, 10,  1, 10,  0,  0,  5, -1,
+   -1,  0,  0, 10,  0,  0,  0, 10,  0,  0, -1,
+   -1,  0,  0, -5,  0,  0,  0, -5,  0,  0, -1,
+   -1,  0, 15,  0, 20,  0, 20,  0, 15,  0, -1,
+   -1,  0, 15,  0, 20,  0, 20,  0, 15,  0, -1,
+   -1,  0,  0, -5,  0,  0,  0, -5,  0,  0, -1,
+   -1,  5,  0, 10,  0,  5,  0, 10,  0,  5, -1,
+   -1,  5,  0,  0, 10,  1, 10,  0,  0,  5, -1,
+   -1, -5, -5,  0,  1,  5,  1,  0, -5, -5, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
   ];
 
   // piece move offsets
@@ -217,7 +262,7 @@
     [-11, 11, 1, -1],                       // kings
     [-10, -12, 10, 12],                     // advisors
     [-21, -23, -13, -9, 21, 23, 13, 9],     // knights
-    [-10, -12, 10, 12],                     // bishops
+    [-20, -24, 20, 24],                     // bishops
     [-11, 11, 1, -1],                       // cannons
     [-11, 11, 1, -1]                        // rooks
   ];
@@ -258,31 +303,29 @@
   function search(sideToMove, alpha, beta, depth, validate) {
     // we are in the leaf node
     if (depth == 0) {
-      /* static evaluation score
+      // static evaluation score
       let score = 0;
 
       // loop over board squares
-      for (var square = 0; square < 128; square++) {
+      for (var square = 0; square < 154; square++) {
         // make sure square is on board
-        if ((square & 0x88) == 0) {
+        if (board[square] != -1) {
           // init piece
           let piece = board[square]
           
           // make sure square contains a piece
           if (piece) {
             // calculate material score
-            score += PIECE_WEIGHTS[piece & 15];
+            score += PIECE_WEIGHTS[(piece & 16 ? (piece & 15) + 7 : piece)];
             
             // calculate positional score
-            (piece & 8) ? (score += board[square + 8]) : (score -= board[square + 8]);
+            (piece & 16) ? (score -= PST[square]) : (score += PST[square]);
           }
         }
       }
 
       // return positive score for red and negative for black
-      return (sideToMove == 8) ? score: -score;
-      */
-      return 0;
+      return (sideToMove == 16) ? -score: score;
     }
 
     var oldAlpha = alpha;       // needed to check whether to store best move or not
@@ -341,7 +384,7 @@
               capturedPiece = board[capturedSquare];
             
               // break if captured own piece
-              if(capturedPiece && ((capturedPiece & 16) == sideToMove)) break;
+              if(capturedPiece && ((capturedPiece & 16) == sideToMove) && pieceType != 7) break;
               
               // track whether the piece has crossed the river
               if ((piece & 16) == RIVER_ZONES[sourceSquare] && (index && pieceType < 3)) break;
@@ -351,17 +394,20 @@
                 // prevent bishops from crossing river
                 if ((piece & 16) != RIVER_ZONES[targetSquare]) break;
                 
-                // prevent bishops from capturing blocking opponent's PIECES
-                if ((squareCount == 1 && capturedPiece) || squareCount > 2) break;
+                // prevent bishops from moving if blocked by a piece
+                if (directions[index] == -24 && board[sourceSquare - 12]) break;
+                if (directions[index] == -20 && board[sourceSquare - 10]) break;
+                if (directions[index] ==  24 && board[sourceSquare + 12]) break;
+                if (directions[index] ==  20 && board[sourceSquare + 10]) break;
               }
               
               // knight rules
               if (pieceType == 5) {
-                // prevent knight from moveing if blocked by a piece
+                // prevent knight from moving if blocked by a piece
                 if ((directions[index] == -23 || directions[index] == -21) && board[sourceSquare - 11]) break;
-                if ((directions[index] == 23 || directions[index] == 21) && board[sourceSquare + 11]) break;
+                if ((directions[index] ==  23 || directions[index] == 21) && board[sourceSquare + 11]) break;
                 if ((directions[index] == -13 || directions[index] == 9) && board[sourceSquare - 1]) break;
-                if ((directions[index] == 13 || directions[index] == -9) && board[sourceSquare + 1]) break;
+                if ((directions[index] ==  13 || directions[index] == -9) && board[sourceSquare + 1]) break;
               }
 
               // cannon rules
@@ -379,6 +425,9 @@
               
               // prevent cannon from landing on empty square after jumping over a piece
               if (jumpOver && capturedPiece == 0) continue;
+              
+              // prevent cannon from capturing own piece (special case)
+              if (jumpOver && ((capturedPiece & 16) == sideToMove)) break;
               
               // prevent king and advisors ecaprig the palace
               if ((pieceType == 3 || pieceType == 4) && PALACE_ZONES[targetSquare] != 1) break;
@@ -422,7 +471,7 @@
               } 
               
               // fake capture for non-slider PIECES
-              capturedPiece += pieceType < 6;
+              capturedPiece += pieceType < 7;
             }
             
             // condition to break out of loop over squares for non-slider PIECES
@@ -545,6 +594,7 @@
   function makeEngineMove(depth) {
     // search position
     var score = search(sideToMove, -10000, 10000, depth);
+    console.log(score)
 
     // Black checkmate detection
     if(score <= -9999) {
@@ -552,7 +602,7 @@
       drawBoard();
       
       // highlight king square
-      for (let square = 0; square < 128; square++)
+      for (let square = 0; square < 154; square++)
         if (board[square] == 19)
           document.getElementById(square).classList.add('mate');
       
@@ -563,11 +613,6 @@
     // move engine piece
     board[bestTargetSquare] = board[bestSourceSquare];
     board[bestSourceSquare] = 0;
-    
-    // if pawn promotion
-    if(((board[bestTargetSquare] == 9) && (bestTargetSquare >= 0 && bestTargetSquare <= 7)) ||
-       ((board[bestTargetSquare] == 18) && (bestTargetSquare >= 112 && bestTargetSquare <= 119)))
-        board[bestTargetSquare] |= 7;    // convert pawn to corresponding sideToMove's queen
     
     // change sideToMove
     sideToMove = 16 - sideToMove;
@@ -581,8 +626,8 @@
       document.getElementById(bestTargetSquare).classList.add('highlight');
       
       // highlight king square
-      for (let square = 0; square < 128; square++)
-        if (board[square] == 11)
+      for (let square = 0; square < 154; square++)
+        if (board[square] == 3)
           document.getElementById(square).classList.add('mate');
       
       // no more moves to make
@@ -597,8 +642,6 @@
       document.getElementById(bestTargetSquare).classList.add('highlight');
     }  
   }
-
-let str = 'xiangqi.png'
 
   // update board view
   function drawBoard() {
@@ -676,5 +719,5 @@ let str = 'xiangqi.png'
   }
 
   // initially render board view
-  drawBoard();  
+  drawBoard();
 </script>
