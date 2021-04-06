@@ -1,8 +1,20 @@
+<!-- Board view -->
 <div id="board"></div>
+
+<!-- Board style -->
 <style>
+
+  .grid {
+      background-image:
+        repeating-linear-gradient(#ccc 0 1px, transparent 1px 100%),
+        repeating-linear-gradient(90deg, #ccc 0 1px, transparent 1px 100%);
+      background-size: 71px 71px;
+  }
   .highlight { box-shadow: inset 0px 0px 3px 3px #ff3300; }
   .mate { box-shadow: inset 0px 0px 5px 5px red; }
 </style>
+
+<!-- Engine & GUI -->
 <script>
 
   /*******************************************\
@@ -574,10 +586,11 @@
   // update board view
   function drawBoard() {
     // create HTML table tag (disable text selection, adjust mouse pointer)
-    var chessBoard = `<table bgcolor="#996633"
-                             align="center"
-                             cellspacing="0"
-                             style="
+    var xiangqiBoard = `<table align="center"
+                             cellspacing="1"
+                             style="background-image: url('https://raw.githubusercontent.com/gbtami/pychess-variants/master/static/images/board/xiangqi.svg');
+                                    background-repeat: no-repeat;
+                                    background-size: 100px 15px;
                           -moz-user-select: none;
                        -webkit-user-select: none;
                            -ms-user-select: none;
@@ -591,7 +604,7 @@
     // loop over board rows
     for (var row = 0; row < 14; row++) {     
       // create table row
-      chessBoard += '<tr>'
+      xiangqiBoard += '<tr>'
       
       // loop over board columns
       for (var col = 0; col < 11; col++) {
@@ -615,23 +628,22 @@
         // make sure square is on board
         if (board[square] != -1)
           // create table cell
-          chessBoard += '<td align="center" id="' + square + 
-                         '"bgcolor="#fff5e6' +
-                         '" width="45" height="45" style="font-size: 20px;"' +
-                         ' onclick="makeUserMove(this.id)">' + 
+          xiangqiBoard += '<td align="center" id="' + square + 
+                         '" width="55" height="55" style="font-size: 30px;"' +
+                         ' onclick="makeUserMove(this.id)">' +
                          PIECES[(piece & 16 ? (piece & 15) + 7 : piece)] +
                          '</td>';
       }
       
       // close table row tag
-      chessBoard += '</tr>';
+      xiangqiBoard += '</tr>';
     }
     
     // close div tag
-    chessBoard += '</table>';
+    xiangqiBoard += '</table>';
     
     // render chess board to screen
-    document.getElementById('board').innerHTML = chessBoard;
+    document.getElementById('board').innerHTML = xiangqiBoard;
   };
 
   // parse & init search depth
@@ -647,6 +659,5 @@
   }
 
   // initially render board view
-  drawBoard();
-
+  drawBoard();  
 </script>
