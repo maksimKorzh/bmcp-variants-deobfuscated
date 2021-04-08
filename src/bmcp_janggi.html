@@ -26,6 +26,7 @@
     =========================================
       Casual Korean chess rule set dropping:
         
+        - pass move
         - bikjang
         - 3 fold repetition draw
     
@@ -137,10 +138,10 @@
 
   // Relative values to evaluate the material score of the position
   const PIECE_WEIGHTS = [
-    //   rP      rK     rA    rN    rB    rC    rR
+    //   bP      bK     bA    bN    bB    bC    bR
     0,   30, 0, 6000,  120,  270,  120,  285,  600,
     
-    //   bP      bK     bA    bN    bB    bC    bR
+    //   rP      rK     rA    rN    rB    rC    rR
         -30,   -6000, -120, -270, -120, -285, -600
   ];
   
