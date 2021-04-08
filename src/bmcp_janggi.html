@@ -103,8 +103,8 @@
               PIECE COLOR ENCOIDING
     =========================================
       
-      Red = 0 
-      Black = 16
+      Blue = 0 
+      Red = 16
 
     =========================================
                PIECE TYPE ENCODING
@@ -117,21 +117,21 @@
                  PIECE ENCODING
     =========================================
     
-     rP : P+| r = 1     0001 | 0000 = 0001
-     rA : K | r = 3     0011 | 0000 = 0011
-     rK : A | r = 4     0100 | 0000 = 0100
-     rB : N | r = 5     0101 | 0000 = 0101
-     rN : B | r = 6     0110 | 0000 = 0110
-     rC : C | r = 7     0111 | 0000 = 0111
-     rR : R | r = 8     1000 | 0000 = 1000
+     bP : P+| b = 1     0001 | 0000 = 0001
+     bA : K | b = 3     0011 | 0000 = 0011
+     bK : A | b = 4     0100 | 0000 = 0100
+     bB : N | b = 5     0101 | 0000 = 0101
+     bN : B | b = 6     0110 | 0000 = 0110
+     bC : C | b = 7     0111 | 0000 = 0111
+     bR : R | b = 8     1000 | 0000 = 1000
     
-     bP : P-| b = 18   00010 | 10000 = 10010
-     bA : K | b = 19   00011 | 10000 = 10011
-     bK : A | b = 20   00100 | 10000 = 10100
-     bB : N | b = 21   00101 | 10000 = 10101
-     bN : B | b = 22   00110 | 10000 = 10110
-     bC : C | b = 23   00111 | 10000 = 10111
-     bR : R | b = 24   01000 | 10000 = 11000
+     rP : P-| r = 18   00010 | 10000 = 10010
+     rA : K | r = 19   00011 | 10000 = 10011
+     rK : A | r = 20   00100 | 10000 = 10100
+     rB : N | r = 21   00101 | 10000 = 10101
+     rN : B | r = 22   00110 | 10000 = 10110
+     rC : C | r = 23   00111 | 10000 = 10111
+     rR : R | r = 24   01000 | 10000 = 11000
 
   \*******************************************/
 
@@ -164,51 +164,35 @@
 
   // piece move offsets
   const MOVE_OFFSETS = [
-    [],                                     // index placeholder
-    [-11, 1, -1],                           // red pawns
-    [ 11, 1, -1],                           // black pawns
-    [-11, 11, 1, -1],                       // kings
-    [-10, -12, 10, 12],                     // advisors
-    [-21, -23, -13, -9, 21, 23, 13, 9],     // knights
-    [-20, -24, 20, 24],                     // bishops
-    [-11, 11, 1, -1],                       // cannons
-    [-11, 11, 1, -1]                        // rooks
+    [],                                           // index placeholder
+    [-11,   1,  -1, -10, -12],                    // red pawns
+    [ 11,   1,  -1,  10,  12],                    // black pawns
+    [-11,  11,   1,  -1, -10, -12,  10,  12],     // kings
+    [-11,  11,   1,  -1, -10, -12,  10,  12],     // advisors
+    [-21, -23, -13,  -9,  21,  23,  13,   9],     // knights
+    [-31, -35, -19, -25,  31,  35,  19,  25],     // bishops
+    [-11, 11, 1, -1],                             // cannons
+    [-11, 11, 1, -1, -10, -12,  10,  12]          // rooks
   ];
-
-  // river banks of xiangqi board
-  const RIVER_ZONES = [
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-   -1, 16, 16, 16, 16, 16, 16, 16, 16, 16, -1,
-   -1, 16, 16, 16, 16, 16, 16, 16, 16, 16, -1,
-   -1, 16, 16, 16, 16, 16, 16, 16, 16, 16, -1,
-   -1, 16, 16, 16, 16, 16, 16, 16, 16, 16, -1,
-   -1, 16, 16, 16, 16, 16, 16, 16, 16, 16, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-  ];
+  
+  // 9/4k4/9/9/9/9/3P1P3/9/4K4/R8 w - - 1 0
   
   // palace zones
   const PALACE_ZONES = [
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1,  0,  0,  0,  1,  1,  1,  0,  0,  0, -1,
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  2,  1,  2,  0,  0,  0,  0,
+    0,  0,  0,  0,  1,  2,  1,  0,  0,  0,  0,
+    0,  0,  0,  0,  2,  1,  2,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  2,  1,  2,  0,  0,  0,  0,
+    0,  0,  0,  0,  1,  2,  1,  0,  0,  0,  0,
+    0,  0,  0,  0,  2,  1,  2,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
   ];
 
   // 11x14 mailbox
@@ -316,9 +300,9 @@
 
           // init directions
           directions = MOVE_OFFSETS[pieceType];
-          
+
           // loop over piece move directions
-          for (let index = 0; index < directions.length; index++) {   // loop over move offsets
+          for (let index = 0; index < directions.length; index++) {
             // init target square
             targetSquare = sourceSquare;
             
@@ -347,22 +331,20 @@
             
               // break if captured own piece
               if(capturedPiece && ((capturedPiece & 16) == sideToMove) && pieceType != 7) break;
+
+              // diagonal moves in palace for pawns, cannons & rooks
+              if ((pieceType < 3 && index > 2) || (pieceType > 6 && index > 3))
+                if (PALACE_ZONES[sourceSquare] != 2 || PALACE_ZONES[targetSquare] == 0) break;
+
+              // rules for kings and advisors
+              if (pieceType == 3 || pieceType == 4) {
+                // prevent diaogonal moves pieces are not in the center or angles
+                if (PALACE_ZONES[sourceSquare] != 2 && index > 3) break;
               
-              // track whether the piece has crossed the river
-              if ((piece & 16) == RIVER_ZONES[sourceSquare] && (index && pieceType < 3)) break;
-              
-              // bishop rules
-              if (pieceType == 6) {
-                // prevent bishops from crossing river
-                if ((piece & 16) != RIVER_ZONES[targetSquare]) break;
-                
-                // prevent bishops from moving if blocked by a piece
-                if (directions[index] == -24 && board[sourceSquare - 12]) break;
-                if (directions[index] == -20 && board[sourceSquare - 10]) break;
-                if (directions[index] ==  24 && board[sourceSquare + 12]) break;
-                if (directions[index] ==  20 && board[sourceSquare + 10]) break;
+                // prevent king and advisors escaping the palace
+                if (PALACE_ZONES[targetSquare] == 0) break;
               }
-              
+
               // knight rules
               if (pieceType == 5) {
                 // prevent knight from moving if blocked by a piece
@@ -372,6 +354,25 @@
                 if ((directions[index] ==  13 || directions[index] == -9) && board[sourceSquare + 1]) break;
               }
 
+              // bishop rules
+              if (pieceType == 6) {
+                // prevent bishop from moving if blocked by a first piece
+                if ((directions[index] == -31 || directions[index] == -35) && board[sourceSquare - 11]) break;
+                if ((directions[index] ==  31 || directions[index] ==  35) && board[sourceSquare + 11]) break;
+                if ((directions[index] == -25 || directions[index] ==  19) && board[sourceSquare - 1]) break;
+                if ((directions[index] == -19 || directions[index] ==  25) && board[sourceSquare + 1]) break;
+                
+                // prevent bishop from moving if blocked by a second piece
+                if (directions[index] == -31 && board[sourceSquare - 21]) break;
+                if (directions[index] == -35 && board[sourceSquare - 23]) break;
+                if (directions[index] ==  31 && board[sourceSquare + 21]) break;
+                if (directions[index] ==  35 && board[sourceSquare + 23]) break;
+                if (directions[index] == -25 && board[sourceSquare - 13]) break;
+                if (directions[index] ==  25 && board[sourceSquare + 13]) break;
+                if (directions[index] ==  19 && board[sourceSquare +  9]) break;
+                if (directions[index] == -19 && board[sourceSquare -  9]) break;
+              }
+              
               // cannon rules
               if (jumpOver == 0) {
                 // cannon "jumps" over the piece
@@ -390,27 +391,6 @@
               
               // prevent cannon from capturing own piece (special case)
               if (jumpOver && ((capturedPiece & 16) == sideToMove)) break;
-              
-              // prevent king and advisors escaping the palace
-              if ((pieceType == 3 || pieceType == 4) && PALACE_ZONES[targetSquare] != 1) break;
-              
-              // opposed kings detection
-              if ((pieceType & 15) == 3) {
-                let direction, target = sourceSquare;
-                sideToMove == 0 ? (direction = -11) : (direction = 11);
-                let opposedKings = false;
-
-                for (let index = 0; index < 9; index++) {
-                  target += direction;
-                  if (board[target] && (board[target] & 15) != 3) break;
-                  if ((board[target] & 15) == 3) {
-                    opposedKings = true;
-                    break;
-                  };
-                }
-                
-                if (opposedKings) return 10000 - ply;
-              }
               
               // return mating score if king has been captured
               if((capturedPiece & 15) == 3) return 10000 - ply; // mate in "ply"
@@ -552,7 +532,7 @@
       document.getElementById(clickSquare).classList.add('highlight');
       
       // make computer move in response
-      setTimeout(function() { makeEngineMove(searchDepth) }, 100);
+      //setTimeout(function() { makeEngineMove(searchDepth) }, 100);
     }
   }
 
